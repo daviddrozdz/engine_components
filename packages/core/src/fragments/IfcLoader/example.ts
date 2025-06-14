@@ -139,16 +139,39 @@ fragmentIfcLoader.settings.webIfc.COORDINATE_TO_ORIGIN = true;
   :::
 */
 
-async function loadIfc() {
-  const file = await fetch(
-    "https://thatopen.github.io/engine_components/resources/small.ifc",
-  );
-  const data = await file.arrayBuffer();
-  const buffer = new Uint8Array(data);
+// Add a hidden file input for IFC files
+const fileInput = document.createElement('input');
+fileInput.type = 'file';
+fileInput.accept = '.ifc';
+fileInput.style.display = 'none';
+document.body.appendChild(fileInput);
+
+// Update loadIfc to accept a File
+async function loadIfc(file?: File) {
+  let buffer: Uint8Array;
+  if (file) {
+    const data = await file.arrayBuffer();
+    buffer = new Uint8Array(data);
+  } else {
+    // fallback to remote example if no file provided
+    const response = await fetch(
+      "https://thatopen.github.io/engine_components/resources/small.ifc",
+    );
+    const data = await response.arrayBuffer();
+    buffer = new Uint8Array(data);
+  }
   const model = await fragmentIfcLoader.load(buffer);
   model.name = "example";
   world.scene.three.add(model);
 }
+
+// Listen for file selection
+fileInput.addEventListener('change', (event) => {
+  const target = event.target as HTMLInputElement;
+  if (target.files && target.files.length > 0) {
+    loadIfc(target.files[0]);
+  }
+});
 
 /* MD
   If you want to get the resulted model every time a new model is loaded, you can subscribe to the following event anywhere in your app:
@@ -235,7 +258,7 @@ const panel = BUI.Component.create<BUI.PanelSection>(() => {
       
         <bim-button label="Load IFC"
           @click="${() => {
-            loadIfc();
+            fileInput.click();
           }}">
         </bim-button>  
             
