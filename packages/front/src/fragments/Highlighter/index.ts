@@ -272,65 +272,69 @@ export class Highlighter
       return null;
     }
 
-    const mesh = result.object as FragmentMesh;
+    if (result) {
+      const mesh = result.object as FragmentMesh;
 
-    // If found mesh is a clipping fill, highlight corresponding frag mesh
-    if (!mesh.fragment && mesh.userData.indexFragmentMap) {
-      if (result.faceIndex === undefined || !mesh.geometry.index) {
+      // If found mesh is a clipping fill, highlight corresponding frag mesh
+      if (!mesh.fragment && mesh.userData.indexFragmentMap) {
+        if (result.faceIndex === undefined || !mesh.geometry.index) {
+          return null;
+        }
+
+        const { userData } = mesh;
+        const fragMap = userData.indexFragmentMap as IndexFragmentMap;
+        const itemFoundInFillMesh = fragMap.get(result.faceIndex!);
+
+        if (itemFoundInFillMesh) {
+          await this.highlightByID(
+            name,
+            itemFoundInFillMesh,
+            removePrevious,
+            zoomToSelection,
+            exclude,
+            mesh,
+            true,
+          );
+
+          const fragID = Object.keys(itemFoundInFillMesh)[0];
+          const itemID = Array.from(itemFoundInFillMesh[fragID])[0];
+          return { id: itemID, fragments: itemFoundInFillMesh };
+        }
+
         return null;
       }
 
-      const { userData } = mesh;
-      const fragMap = userData.indexFragmentMap as IndexFragmentMap;
-      const itemFoundInFillMesh = fragMap.get(result.faceIndex!);
-
-      if (itemFoundInFillMesh) {
-        await this.highlightByID(
-          name,
-          itemFoundInFillMesh,
-          removePrevious,
-          zoomToSelection,
-          exclude,
-          mesh,
-          true,
-        );
-
-        const fragID = Object.keys(itemFoundInFillMesh)[0];
-        const itemID = Array.from(itemFoundInFillMesh[fragID])[0];
-        return { id: itemID, fragments: itemFoundInFillMesh };
+      const geometry = mesh.geometry;
+      const instanceID = result.instanceId;
+      if (!geometry || instanceID === undefined) {
+        return null;
+      }
+      const itemID = mesh.fragment.getItemID(instanceID);
+      if (itemID === null) {
+        throw new Error("Item ID not found!");
       }
 
-      return null;
+      const group = mesh.fragment.group;
+      if (!group) {
+        throw new Error("Fragment must belong to a FragmentsGroup!");
+      }
+
+      const found = group.getFragmentMap([itemID]);
+
+      await this.highlightByID(
+        name,
+        found,
+        removePrevious,
+        zoomToSelection,
+        exclude,
+        undefined,
+        true,
+      );
+
+      return { id: itemID, fragments: found };
     }
 
-    const geometry = mesh.geometry;
-    const instanceID = result.instanceId;
-    if (!geometry || instanceID === undefined) {
-      return null;
-    }
-    const itemID = mesh.fragment.getItemID(instanceID);
-    if (itemID === null) {
-      throw new Error("Item ID not found!");
-    }
-
-    const group = mesh.fragment.group;
-    if (!group) {
-      throw new Error("Fragment must belong to a FragmentsGroup!");
-    }
-
-    const found = group.getFragmentMap([itemID]);
-
-    await this.highlightByID(
-      name,
-      found,
-      removePrevious,
-      zoomToSelection,
-      exclude,
-      undefined,
-      true,
-    );
-
-    return { id: itemID, fragments: found };
+    return null;
   }
 
   // TODO: Make parameters an object?

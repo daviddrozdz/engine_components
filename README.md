@@ -86,7 +86,16 @@ world.scene.setup();
 world.camera.controls.setLookAt(3, 3, 3, 0, 0, 0);
 ```
 
-
 [npm]: https://img.shields.io/npm/v/@thatopen/components
 [npm-url]: https://www.npmjs.com/package/@thatopen/components
 [npm-downloads]: https://img.shields.io/npm/dw/@thatopen/components
+
+
+
+<!-- How to run -->
+<!-- This project uses Yarn as its package manager, not npm. Using npm commands might lead to errors. -->
+<!-- yarn install -->
+<!-- yarn build-core -->
+<!-- yarn build-front -->
+<!-- yarn build-examples -->
+<!-- yarn dev -->
